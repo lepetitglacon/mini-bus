@@ -1,47 +1,41 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
+  <div id="map"></div>
+  <button @click="zoomLevel++">Zoom+</button>
 
-  <main>
-    <TheWelcome />
-  </main>
 </template>
 
+<script setup lang="ts">
+import {onMounted, ref, watch} from "vue";
+import L from 'leaflet'
+
+import 'leaflet/dist/leaflet.css'
+
+import stopsFromJSON from './assets/json/stops.json'
+console.log(stopsFromJSON)
+
+const map = ref()
+const center = ref([47.25, 6.03333])
+const zoomLevel = ref(13)
+
+onMounted(() => {
+
+  map.value = L.map('map', {
+    drawControl: true
+  })
+  map.value.setView(center.value, zoomLevel.value)
+
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map.value);
+
+})
+
+
+watch(zoomLevel, newVal => map.value.setView(center.value, newVal))
+</script>
+
 <style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
+#map { height: 50vh; width: 100vw }
 </style>
