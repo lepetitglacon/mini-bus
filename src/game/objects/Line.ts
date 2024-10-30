@@ -1,8 +1,9 @@
-export class Stop {
+export class Line {
 
     public id: any;
-    public coords: [number, number];
     public marker: L.Marker|null = null;
+    public latitude: number;
+    public longitude: number;
 
     constructor(id: number) {
         this.id = id

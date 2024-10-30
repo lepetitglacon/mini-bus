@@ -23,6 +23,7 @@
     "@types/jsdom": "^21.1.7",
     "@types/leaflet": "^1.9.14",
     "@types/node": "^20.17.0",
+    "@types/turf": "^3.5.32",
     "@vitejs/plugin-vue": "^5.1.4",
     "@vitejs/plugin-vue-jsx": "^4.0.1",
     "@vue/test-utils": "^2.4.6",
