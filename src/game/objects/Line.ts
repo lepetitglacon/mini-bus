@@ -9,14 +9,19 @@ export default class Line {
     public loop: boolean = false;
     public color: string = '#338866';
     public stops: Set<Stop> = new Set();
+    public lineOnMap = null;
 
-    constructor(id: number) {
+    public weight = 20
+
+    constructor(id: number, color: string|null) {
         this.id = id
+        this.color = color ?? this.color
     }
 
     resetFromDrawing() {
         if (!this.active) {
             this.stops.clear()
+            this.lineOnMap = null;
         }
     }
 
@@ -32,7 +37,7 @@ export default class Line {
         const polyline = L.polyline(this.getStopsCoords(), {
             color: this.color,
             stroke: true,
-            weight: 10
+            weight: this.weight
         })
         if (this.loop) {
             polyline.getLatLngs().push([Array.from(this.stops.values())[0].latitude, Array.from(this.stops.values())[0].longitude])
@@ -40,28 +45,16 @@ export default class Line {
         return polyline
     }
 
-    static getPolylineFromCoords(coords) {
-        return L.polyline(coords, {
-            color: this.color,
-            stroke: true,
-            weight: 10
-        })
-    }
-
-    addToLayer(layer) {
-
-        coords.push([closestPointInfo.stop.latitude, closestPointInfo.stop.longitude])
-        const polyline = L.polyline(coords, { color: 'red', stroke: true, weight: 10 })
-    }
-
     toString() {
         return JSON.stringify(this, (key, value) => {
-            if (key === 'stops') {
-                return [...this.stops.values()]
-            } else if (key === 'marker') {
-                return undefined
-            } else {
-                return value
+            switch (key) {
+                case 'lineOnMap':
+                case 'marker':
+                    return undefined
+                case 'stops':
+                    return [...this.stops.values()]
+                default:
+                    return value
             }
         },
     4

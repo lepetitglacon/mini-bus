@@ -16,7 +16,6 @@ export default class Stop {
 
     toString() {
         return JSON.stringify(this, function (key, val) {
-            console.log(key, val)
             if (key === 'marker') {
                 return undefined
             } else {

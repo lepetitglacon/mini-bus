@@ -3,7 +3,7 @@
 
   <div style="height: 200px; line-break: anywhere">
     <pre v-if="isDrawing">{{drawingLine}}</pre>
-    <pre v-if="isDrawing">{{drawingLastHitStop}}</pre>
+    <pre v-if="isDrawing">{{ drawingCurrentStop }}</pre>
   </div>
 
   <p>stops on map {{stopsOnMap.size}}</p>
@@ -34,9 +34,10 @@ const lineManager = inject('lineManager')
 
 const drawSnapDistance = ref(10) // meters
 const isDrawing = ref(false)
+const isModifying = ref(false)
 const drawingLine = ref(null)
 const drawingStops = ref(new Set<Stop>())
-const drawingLastHitStop = ref(null)
+const drawingCurrentStop = ref(null)
 
 const {stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopFromLatLng} = useStopsStore()
 const {dezoom} = useGameStore()
@@ -71,10 +72,10 @@ onMounted(() => {
     if (line) {
       const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
       if (closestPointInfo?.stop && closestPointInfo.distance < drawSnapDistance.value) {
-        console.log('snapped to ', closestPointInfo)
+        console.log('mousedown snapped to ', closestPointInfo)
         isDrawing.value = true
         drawingLine.value = line
-        line.stops.add(stop)
+        line.stops.add(closestPointInfo?.stop)
       }
     } else {
       console.info('No line left to draw')
@@ -83,16 +84,22 @@ onMounted(() => {
   map.value.on('mousemove', e => {
     if (isDrawing.value) {
       const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
-      if (
-          closestPointInfo?.stop
-          && closestPointInfo.distance < drawSnapDistance.value
-          && drawingLastHitStop.value !== closestPointInfo.stop
-      ) {
-        console.log('snapped to ', closestPointInfo, 'while drawing')
-        drawingLastHitStop.value = stop
-        drawingLine.value.stops.add(closestPointInfo?.stop)
+      if (!closestPointInfo.stop) {
+        return
+      }
+      if (closestPointInfo.distance < drawSnapDistance.value) {
+        if (closestPointInfo.stop !== drawingCurrentStop.value) {
+          if (drawingLine.value.stops.has(closestPointInfo?.stop)) {
+            if (Array.from(drawingLine.value.stops.values())[0] !== closestPointInfo?.stop) {
+              drawingLine.value.stops.delete(closestPointInfo?.stop)
+            }
+          } else {
+            drawingLine.value.stops.add(closestPointInfo?.stop)
+          }
+          drawingCurrentStop.value = closestPointInfo.stop
+        }
       } else {
-        // drawingLastHitStop.value = null
+        drawingCurrentStop.value = null
       }
 
       const polyline = drawingLine.value.getPolyline()
@@ -109,21 +116,31 @@ onMounted(() => {
           closestPointInfo?.stop
           && closestPointInfo.distance < drawSnapDistance.value
       ) {
-        console.log('snapped to ', closestPointInfo)
+        console.log('mouseup snapped to ', closestPointInfo)
         if (closestPointInfo?.stop.id === Array.from(drawingLine.value.stops.values())[0].id) {
           drawingLine.value.loop = true
         }
       }
 
-      isDrawing.value = false
-      linesLayer.value.addLayer(drawingLine.value.getPolyline())
+      const line = drawingLine.value
+      drawingLine.value.lineOnMap = drawingLine.value.getPolyline()
+      drawingLine.value.lineOnMap.on('mousedown', e => {
+        console.log(e, line)
+        drawingLine.value = line
+        isModifying.value = true
+      })
+      linesLayer.value.addLayer(drawingLine.value.lineOnMap)
       drawLinesLayer.value.clearLayers()
 
-      if (drawingLine.value.stops.size > 0) {
+      if (drawingLine.value.stops.size > 1) {
         drawingLine.value.active = true
+      } else {
+        drawingLine.value.resetFromDrawing()
       }
 
+      isDrawing.value = false
       drawingLine.value = null
+      drawingCurrentStop.value = null
     }
   })
 

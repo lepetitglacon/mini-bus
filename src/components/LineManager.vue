@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div style="display: flex">
     <div v-for="line of lines" :style="{
           backgroundColor: line.color,
           width: '100px',
@@ -21,6 +21,7 @@ import Line from "@/game/objects/Line";
 
 const lines = ref<Set<Line>>(new Set())
 lines.value.add(new Line(1))
+lines.value.add(new Line(2, '#884466'))
 
 function getFreeLine() {
   for (const line of lines.value.values()) {
