@@ -14,5 +14,15 @@ export default class Stop {
         this.marker = new L.Marker([this.latitude, this.longitude])
     }
 
+    toString() {
+        return JSON.stringify(this, function (key, val) {
+            console.log(key, val)
+            if (key === 'marker') {
+                return undefined
+            } else {
+                return val
+            }
+        })
+    }
 
 }

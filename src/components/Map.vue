@@ -1,5 +1,11 @@
 <template>
   <div id="map"></div>
+
+  <div style="height: 200px; line-break: anywhere">
+    <pre v-if="isDrawing">{{drawingLine}}</pre>
+    <pre v-if="isDrawing">{{drawingLastHitStop}}</pre>
+  </div>
+
   <p>stops on map {{stopsOnMap.size}}</p>
   <p>stops in bounds {{stopsInBounds.size}}</p>
   <p>{{zoomLevel}}</p>
@@ -10,6 +16,7 @@ import {inject, onMounted, ref, watch} from "vue";
 import L, {polyline} from "leaflet";
 import {useStopsStore} from "@/stores/stops";
 import Stop from "@/game/objects/Stop";
+import {useGameStore} from "@/stores/game";
 
 const map = ref()
 const center = ref([47.23510156121514, 6.025931239128114])
@@ -17,19 +24,22 @@ const zoomLevel = ref(18)
 const gameMaxZoomLevel = ref(15)
 
 const dezoomIntervalTime = ref(10000)
-const randomStopSpawnIntervalTime = ref(3000)
-
+const randomStopSpawnIntervalTime = ref(1000)
 
 const stopsLayer = ref<L.LayerGroup>(new L.layerGroup())
 const linesLayer = ref<L.LayerGroup>(new L.layerGroup())
 const drawLinesLayer = ref<L.LayerGroup>(new L.layerGroup())
 
+const lineManager = inject('lineManager')
+
+const drawSnapDistance = ref(10) // meters
 const isDrawing = ref(false)
+const drawingLine = ref(null)
 const drawingStops = ref(new Set<Stop>())
-const drawingInitialStop = ref(null)
-const drawSnapDistance = ref(25) // meters
+const drawingLastHitStop = ref(null)
 
 const {stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopFromLatLng} = useStopsStore()
+const {dezoom} = useGameStore()
 
 onMounted(() => {
   map.value = L.map('map', {
@@ -57,48 +67,68 @@ onMounted(() => {
   })
 
   map.value.on('mousedown', e => {
-    const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
-    if (closestPointInfo?.stop && closestPointInfo.distance < drawSnapDistance.value) {
-      console.log('snapped to ', closestPointInfo)
-      isDrawing.value = true
-      drawingStops.value.add(closestPointInfo?.stop)
-      drawingInitialStop.value = closestPointInfo?.stop
+    const line = lineManager.value.getFreeLine()
+    if (line) {
+      const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
+      if (closestPointInfo?.stop && closestPointInfo.distance < drawSnapDistance.value) {
+        console.log('snapped to ', closestPointInfo)
+        isDrawing.value = true
+        drawingLine.value = line
+        line.stops.add(stop)
+      }
+    } else {
+      console.info('No line left to draw')
     }
-
   })
   map.value.on('mousemove', e => {
     if (isDrawing.value) {
-      const coords = []
-      for (const stop of drawingStops.value.values()) {
-        coords.push([stop.latitude, stop.longitude])
+      const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
+      if (
+          closestPointInfo?.stop
+          && closestPointInfo.distance < drawSnapDistance.value
+          && drawingLastHitStop.value !== closestPointInfo.stop
+      ) {
+        console.log('snapped to ', closestPointInfo, 'while drawing')
+        drawingLastHitStop.value = stop
+        drawingLine.value.stops.add(closestPointInfo?.stop)
+      } else {
+        // drawingLastHitStop.value = null
       }
-      coords.push([e.latlng.lat, e.latlng.lng])
-      const polyline = L.polyline(coords, { color: 'red', stroke: true, weight: 10 })
+
+      const polyline = drawingLine.value.getPolyline()
+      polyline.getLatLngs().push([e.latlng.lat, e.latlng.lng])
+
       drawLinesLayer.value.clearLayers()
       drawLinesLayer.value.addLayer(polyline)
     }
   })
   map.value.on('mouseup', e => {
-    const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
-    if (closestPointInfo?.stop?.id != drawingInitialStop.value?.id && closestPointInfo.distance < drawSnapDistance.value) {
-      console.log('snapped to ', closestPointInfo)
-      const coords = []
-      for (const stop of drawingStops.value.values()) {
-        coords.push([stop.latitude, stop.longitude])
+    if (isDrawing.value) {
+      const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
+      if (
+          closestPointInfo?.stop
+          && closestPointInfo.distance < drawSnapDistance.value
+      ) {
+        console.log('snapped to ', closestPointInfo)
+        if (closestPointInfo?.stop.id === Array.from(drawingLine.value.stops.values())[0].id) {
+          drawingLine.value.loop = true
+        }
       }
-      coords.push([e.latlng.lat, e.latlng.lng])
-      const polyline = L.polyline(coords, { color: 'red', stroke: true, weight: 10 })
-      linesLayer.value.addLayer(polyline)
-    }
 
-    isDrawing.value = false
-    drawingStops.value.clear()
-    drawingInitialStop.value = null
-    drawLinesLayer.value.clearLayers()
+      isDrawing.value = false
+      linesLayer.value.addLayer(drawingLine.value.getPolyline())
+      drawLinesLayer.value.clearLayers()
+
+      if (drawingLine.value.stops.size > 0) {
+        drawingLine.value.active = true
+      }
+
+      drawingLine.value = null
+    }
   })
 
   const dezoomInterval = setInterval(() => {
-    if (zoomLevel.value > gameMaxZoomLevel.value) {
+    if (zoomLevel.value > gameMaxZoomLevel.value && dezoom) {
       zoomLevel.value--
     }
   }, Math.random() * (dezoomIntervalTime.value - 500) + 500)
