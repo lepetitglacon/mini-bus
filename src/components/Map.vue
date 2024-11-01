@@ -1,6 +1,6 @@
 <template>
   <div id="map"></div>
-  <p>passengers {{passengers}}</p>
+  <p>passengers {{gameStore.passengers}}</p>
 
   <div style="height: 200px; line-break: anywhere">
     <pre v-if="isDrawing || isModifying">{{drawingLine}}</pre>
@@ -42,7 +42,7 @@ const isModifying = ref(false)
 const modifyingInfo = ref(null)
 
 const {stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopFromLatLng} = useStopsStore()
-const {dezoom, passengers} = useGameStore()
+const gameStore = useGameStore()
 
 onMounted(() => {
   map.value = L.map('map', {
@@ -207,7 +207,7 @@ onMounted(() => {
   })
 
   const dezoomInterval = setInterval(() => {
-    if (zoomLevel.value > gameMaxZoomLevel.value && dezoom) {
+    if (zoomLevel.value > gameMaxZoomLevel.value && gameStore.dezoom) {
       zoomLevel.value--
     }
   }, Math.random() * (dezoomIntervalTime.value - 500) + 500)
@@ -257,7 +257,7 @@ watch(stopsOnMap, (old, stopsOnMap) => {
   }
 })
 
-const stop = new Stop('test 1', [47.23510156121514, 6.025931239128114], 'Test 1')
+const stop = new Stop('test 1', [47.23595, 6.02525], 'Test 1')
 stopsOnMap.add(stop)
 const stop2 = new Stop('test 2', [47.2355, 6.0255], 'Test 2')
 stopsOnMap.add(stop2)

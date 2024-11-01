@@ -36,6 +36,8 @@ export default class Bus {
             iconSize: [0, 0],
             iconAnchor: [25, 25]
         });
+
+        this.gameStore = useGameStore()
     }
 
     update() {
@@ -60,7 +62,7 @@ export default class Bus {
                     passengersToUnload.pop()
                     this.passengers = new Set(passengersToUnload)
                     this.onOffStart = 0
-                    this.gameStorePassengers = this.gameStorePassengers + 1
+                    this.gameStore.passengers++
                     console.log('passenger unloaded')
                 }
                 return
