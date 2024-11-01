@@ -88,17 +88,16 @@ export default class Bus {
             this.atStop = false
 
             // set next stop
+            const stops = this.line.getStopsAsArray()
+            const currentStopIndex = stops.indexOf(this.nextOrCurrentStop)
+            this.lastStop = this.nextOrCurrentStop
             if (this.line.loop) {
-
+                this.nextOrCurrentStop = stops[(currentStopIndex + 1) % stops.length]
             } else {
-                const stops = this.line.getStopsAsArray()
-                const currentStopIndex = stops.indexOf(this.nextOrCurrentStop)
-                this.lastStop = this.nextOrCurrentStop
                 const isLastOrFirstStop = currentStopIndex === stops.length - 1 || currentStopIndex === 0
                 if (isLastOrFirstStop) {
                     this.direction = !this.direction
                 }
-                console.log(this.direction)
                 this.nextOrCurrentStop = stops[this.direction ? currentStopIndex + 1 : currentStopIndex - 1]
             }
         }
