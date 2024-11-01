@@ -257,4 +257,8 @@ defineExpose({
   width: 100px;
   text-align: center;
 }
+.stop-marker-pin {
+  width: 100px;
+  text-align: center;
+}
 </style>

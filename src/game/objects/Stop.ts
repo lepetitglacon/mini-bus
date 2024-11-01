@@ -20,23 +20,18 @@ export default class Stop {
         this.customIcon = L.divIcon({
             className: 'custom-div-icon',
             html: `
+                <div class='stop-marker-pin'>O</div>
                 <div class='stop-marker'>${this.name}</div>
                 <div class="stop-marker-stops"></div>
             `,
             iconSize: [0, 0],
-            iconAnchor: [-10, 5]
+            iconAnchor: [50, 5]
         });
         this.marker = new L.Marker([this.latitude, this.longitude], {
             icon: this.customIcon,
             title: this.name,
             riseOnHover: true
         })
-        // this.marker.on('mouseover', e => {
-        //     e.target.setZIndexOffset(999)
-        // })
-        // this.marker.on('mouseleave', e => {
-        //     e.target.setZIndexOffset(-999)
-        // })
         this.marker.on('game:change', e => {
             const stopsDiv = this.marker?.getElement()?.querySelector('.stop-marker-stops')
             stopsDiv.innerHTML = ''
