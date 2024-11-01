@@ -43,8 +43,6 @@ export default class Bus {
             const stops = this.line.getStopsAsArray()
             this.lastStop = stops[stops.length - 1]
             this.nextOrCurrentStop = stops[0]
-            console.log(this.lastStop)
-            console.log(this.nextOrCurrentStop)
             this.marker = new L.Marker([this.nextOrCurrentStop.latitude, this.nextOrCurrentStop.longitude], {
                 icon: this.customIcon
             })
@@ -70,14 +68,14 @@ export default class Bus {
                 console.log('no one to unload')
             }
             const passengersToLoad = this.getPassengerToLoad()
-            console.log(passengersToLoad)
             if (passengersToLoad.length) {
                 if (this.onOffStart === 0) {
                     this.onOffStart = performance.now()
                 }
                 if (this.onOffStart + this.passengerOnOffTime < performance.now()) {
-                    this.passengers.add(passengersToLoad.pop())
-                    this.nextOrCurrentStop.passengers = new Set(passengersToLoad)
+                    const passenger = passengersToLoad.pop()
+                    this.passengers.add(passenger)
+                    this.nextOrCurrentStop.passengers.delete(passenger)
                     this.nextOrCurrentStop.marker.fireEvent('game:change')
                     this.onOffStart = 0
                     console.log('passenger loaded')
