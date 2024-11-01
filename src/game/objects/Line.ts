@@ -1,6 +1,6 @@
 import type Stop from "@/game/objects/Stop";
 import L from "leaflet";
-import {computed, type ComputedRef} from "vue";
+import * as turf from "@turf/turf";
 
 export default class Line {
 
@@ -19,16 +19,19 @@ export default class Line {
     }
 
     resetFromDrawing() {
-        if (!this.active) {
-            this.stops.clear()
-            this.lineOnMap = null;
-        }
+        this.stops.clear()
+        this.lineOnMap = null;
+        this.active = false
+        this.loop = false
     }
 
     getStopsCoords() {
         const coords = []
         for (const stop of this.stops.values()) {
             coords.push([stop.latitude, stop.longitude])
+        }
+        if (this.loop) {
+            coords.push([Array.from(this.stops.values())[0].latitude, Array.from(this.stops.values())[0].longitude])
         }
         return coords
     }
@@ -43,6 +46,42 @@ export default class Line {
             polyline.getLatLngs().push([Array.from(this.stops.values())[0].latitude, Array.from(this.stops.values())[0].longitude])
         }
         return polyline
+    }
+
+    findClosestSegment(clickLatLng) {
+        // Convert the click location to a Turf point
+        const clickPoint = turf.point(clickLatLng);
+
+        // Initialize variables to store the minimum distance and index
+        let minDistance = Infinity;
+        let closestSegment = null;
+        let closestSegmentIndex = -1;
+
+        // Iterate through each segment of the polyline
+        const coords = this.getStopsCoords()
+        for (let i = 0; i < coords.length - 1; i++) {
+            // Create a Turf line segment between two consecutive points
+            const segment = turf.lineString([
+                coords[i],
+                coords[i + 1]
+            ]);
+
+            // Calculate the distance from the click point to the segment
+            const distance = turf.pointToLineDistance(clickPoint, segment, { units: 'meters' });
+
+            // Update if the distance is the smallest found so far
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestSegment = segment;
+                closestSegmentIndex = i;
+            }
+        }
+
+        return {
+            index1: closestSegmentIndex,
+            index2: closestSegmentIndex + 1,
+            segment: closestSegment
+        };
     }
 
     toString() {

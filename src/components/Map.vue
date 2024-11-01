@@ -2,8 +2,8 @@
   <div id="map"></div>
 
   <div style="height: 200px; line-break: anywhere">
-    <pre v-if="isDrawing">{{drawingLine}}</pre>
-    <pre v-if="isDrawing">{{ drawingCurrentStop }}</pre>
+    <pre v-if="isDrawing || isModifying">{{drawingLine}}</pre>
+    <pre v-if="isDrawing || isModifying">{{ drawingCurrentStop }}</pre>
   </div>
 
   <p>stops on map {{stopsOnMap.size}}</p>
@@ -17,6 +17,7 @@ import L, {polyline} from "leaflet";
 import {useStopsStore} from "@/stores/stops";
 import Stop from "@/game/objects/Stop";
 import {useGameStore} from "@/stores/game";
+import type Line from "@/game/objects/Line";
 
 const map = ref()
 const center = ref([47.23510156121514, 6.025931239128114])
@@ -34,10 +35,10 @@ const lineManager = inject('lineManager')
 
 const drawSnapDistance = ref(10) // meters
 const isDrawing = ref(false)
+const drawingLine = ref<Line|null>(null)
+const drawingCurrentStop = ref<Stop|null>(null)
 const isModifying = ref(false)
-const drawingLine = ref(null)
-const drawingStops = ref(new Set<Stop>())
-const drawingCurrentStop = ref(null)
+const modifyingInfo = ref(null)
 
 const {stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopFromLatLng} = useStopsStore()
 const {dezoom} = useGameStore()
@@ -71,6 +72,7 @@ onMounted(() => {
     const line = lineManager.value.getFreeLine()
     if (line) {
       const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
+      console.log(closestPointInfo)
       if (closestPointInfo?.stop && closestPointInfo.distance < drawSnapDistance.value) {
         console.log('mousedown snapped to ', closestPointInfo)
         isDrawing.value = true
@@ -82,52 +84,101 @@ onMounted(() => {
     }
   })
   map.value.on('mousemove', e => {
-    if (isDrawing.value) {
-      const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
-      if (!closestPointInfo.stop) {
-        return
-      }
-      if (closestPointInfo.distance < drawSnapDistance.value) {
-        if (closestPointInfo.stop !== drawingCurrentStop.value) {
-          if (drawingLine.value.stops.has(closestPointInfo?.stop)) {
-            if (Array.from(drawingLine.value.stops.values())[0] !== closestPointInfo?.stop) {
-              drawingLine.value.stops.delete(closestPointInfo?.stop)
+    if (!isDrawing.value && !isModifying.value) {
+      return
+    }
+    if (!drawingLine.value) {
+      return console.log('No drawing line')
+    }
+    const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
+    if (!closestPointInfo.stop) {
+      return console.log('No closest point')
+    }
+
+    if (closestPointInfo.distance < drawSnapDistance.value) {
+      if (closestPointInfo.stop !== drawingCurrentStop.value) {
+
+        if (drawingLine.value.stops.has(closestPointInfo?.stop)) {
+          if (Array.from(drawingLine.value.stops.values())[0] !== closestPointInfo?.stop || isModifying.value) {
+            drawingLine.value.stops.delete(closestPointInfo?.stop)
+            if (isModifying.value) {
+              const closestSegmentInfo = drawingLine.value.findClosestSegment([e.latlng.lat, e.latlng.lng])
+              modifyingInfo.value = closestSegmentInfo
             }
+          }
+        } else {
+          if (isModifying.value) {
+            const newSetArray = Array.from(drawingLine.value.stops.values())
+            newSetArray.splice(modifyingInfo.value.index2, 0, closestPointInfo.stop)
+            drawingLine.value.stops = new Set(newSetArray)
           } else {
             drawingLine.value.stops.add(closestPointInfo?.stop)
           }
-          drawingCurrentStop.value = closestPointInfo.stop
         }
-      } else {
-        drawingCurrentStop.value = null
+
+        drawingCurrentStop.value = closestPointInfo.stop
       }
-
-      const polyline = drawingLine.value.getPolyline()
-      polyline.getLatLngs().push([e.latlng.lat, e.latlng.lng])
-
-      drawLinesLayer.value.clearLayers()
-      drawLinesLayer.value.addLayer(polyline)
+    } else {
+      drawingCurrentStop.value = null
     }
+
+    const polyline = drawingLine.value.getPolyline()
+    if (isModifying.value) {
+      if (drawingLine.value.loop) {
+        polyline.getLatLngs().push(polyline.getLatLngs()[0])
+      }
+      // on refait l'ordre du set
+      if (!modifyingInfo.value) {
+        const closestSegmentInfo = drawingLine.value.findClosestSegment([e.latlng.lat, e.latlng.lng])
+        modifyingInfo.value = closestSegmentInfo
+      }
+      if (modifyingInfo.value.index2 > 0) {
+        polyline.getLatLngs().splice(modifyingInfo.value.index2, 0, [e.latlng.lat, e.latlng.lng])
+      } else {
+        polyline.getLatLngs().push([e.latlng.lat, e.latlng.lng])
+      }
+    } else {
+      // on ajoute le curseur actuel à la fin des points
+      polyline.getLatLngs().push([e.latlng.lat, e.latlng.lng])
+    }
+
+    drawLinesLayer.value.clearLayers()
+    drawLinesLayer.value.addLayer(polyline)
+
   })
   map.value.on('mouseup', e => {
-    if (isDrawing.value) {
+    if (!drawingLine.value) {
+      return
+    }
+    if (isDrawing.value || isModifying.value) {
       const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
-      if (
-          closestPointInfo?.stop
-          && closestPointInfo.distance < drawSnapDistance.value
-      ) {
+      if (!closestPointInfo?.stop) {
+        return
+      }
+
+      if (closestPointInfo.distance < drawSnapDistance.value) {
         console.log('mouseup snapped to ', closestPointInfo)
-        if (closestPointInfo?.stop.id === Array.from(drawingLine.value.stops.values())[0].id) {
+        if (
+            closestPointInfo?.stop === Array.from(drawingLine.value.stops.values())[0]
+            && drawingLine.value.stops.size > 2
+        ) {
           drawingLine.value.loop = true
+        } else {
+          drawingLine.value.loop = false
+        }
+      } else {
+        if (drawingLine.value.stops.size <= 2) {
+          drawingLine.value.loop = false
         }
       }
 
       const line = drawingLine.value
       drawingLine.value.lineOnMap = drawingLine.value.getPolyline()
       drawingLine.value.lineOnMap.on('mousedown', e => {
-        console.log(e, line)
+        console.log('mousedown on line', e, line)
         drawingLine.value = line
         isModifying.value = true
+        linesLayer.value.removeLayer(drawingLine.value.lineOnMap)
       })
       linesLayer.value.addLayer(drawingLine.value.lineOnMap)
       drawLinesLayer.value.clearLayers()
@@ -139,8 +190,10 @@ onMounted(() => {
       }
 
       isDrawing.value = false
+      isModifying.value = false
       drawingLine.value = null
       drawingCurrentStop.value = null
+      modifyingInfo.value = null
     }
   })
 
@@ -163,7 +216,7 @@ watch(zoomLevel, (newZoom) => {
   }
 })
 
-watch(stopsOnMap, (stopsOnMap) => {
+watch(stopsOnMap, (old, stopsOnMap) => {
   for (const stop of stopsOnMap) {
     if (!stopsLayer.value.hasLayer(stop.marker)) {
       stopsLayer.value.addLayer(stop.marker)
@@ -171,9 +224,9 @@ watch(stopsOnMap, (stopsOnMap) => {
   }
 })
 
-const stop = new Stop('test 1', [47.23510156121514, 6.025931239128114])
+const stop = new Stop('test 1', [47.23510156121514, 6.025931239128114], 'Test 1')
 stopsOnMap.add(stop)
-const stop2 = new Stop('test 2', [47.2355, 6.0255])
+const stop2 = new Stop('test 2', [47.2355, 6.0255], 'Test 2')
 stopsOnMap.add(stop2)
 
 defineExpose({
@@ -183,6 +236,25 @@ defineExpose({
 })
 </script>
 
-<style scoped>
+<style>
 #map { height: 50vh}
+
+.custom-div-icon {
+  background-color: white;
+
+}
+.stop-marker {
+  background-color: #616161;
+  width: 100px;
+  text-align: center;
+  color: white;
+  font-weight: 900;
+}
+.stop-marker-stops {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  width: 100px;
+  text-align: center;
+}
 </style>
