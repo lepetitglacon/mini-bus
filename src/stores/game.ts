@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 
 export const useGameStore = defineStore('game', () => {
 
-  const passengers = ref()
+  const passengers = ref(0)
 
   const dezoom = ref(false)
 

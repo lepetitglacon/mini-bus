@@ -1,15 +1,20 @@
 import type Stop from "@/game/objects/Stop";
 import L from "leaflet";
 import * as turf from "@turf/turf";
+import Bus from "@/game/objects/Bus";
 
 export default class Line {
 
     public id: any;
     public active = false
     public loop: boolean = false;
+
     public color: string = '#338866';
+    public lineLayer: L.Layer|null = null;
+    public layerGroup = new L.LayerGroup()
+
+    public bus: Bus = new Bus(this);
     public stops: Set<Stop> = new Set();
-    public lineOnMap = null;
 
     public weight = 20
 
@@ -19,8 +24,10 @@ export default class Line {
     }
 
     resetFromDrawing() {
+        this.bus.removeFromMap()
         this.stops.clear()
-        this.lineOnMap = null;
+        this.layerGroup.clearLayers()
+        this.lineLayer = null;
         this.active = false
         this.loop = false
     }
@@ -34,6 +41,10 @@ export default class Line {
             coords.push([Array.from(this.stops.values())[0].latitude, Array.from(this.stops.values())[0].longitude])
         }
         return coords
+    }
+
+    getStopsAsArray() {
+        return Array.from(this.stops)
     }
 
     getPolyline() {
@@ -84,14 +95,24 @@ export default class Line {
         };
     }
 
+    update() {
+        this.bus.update()
+    }
+
     toString() {
         return JSON.stringify(this, (key, value) => {
             switch (key) {
-                case 'lineOnMap':
+                case 'lineLayer':
+                case 'layerGroup':
                 case 'marker':
+                case 'customIcon':
+                case 'line':
+                case 'destination':
+                case 'gameStore':
                     return undefined
                 case 'stops':
-                    return [...this.stops.values()]
+                case 'passengers':
+                    return [...value.values()]
                 default:
                     return value
             }

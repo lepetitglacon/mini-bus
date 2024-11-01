@@ -1,5 +1,6 @@
 <template>
   <div id="map"></div>
+  <p>passengers {{passengers}}</p>
 
   <div style="height: 200px; line-break: anywhere">
     <pre v-if="isDrawing || isModifying">{{drawingLine}}</pre>
@@ -41,7 +42,7 @@ const isModifying = ref(false)
 const modifyingInfo = ref(null)
 
 const {stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopFromLatLng} = useStopsStore()
-const {dezoom} = useGameStore()
+const {dezoom, passengers} = useGameStore()
 
 onMounted(() => {
   map.value = L.map('map', {
@@ -173,19 +174,21 @@ onMounted(() => {
       }
 
       const line = drawingLine.value
-      drawingLine.value.lineOnMap = drawingLine.value.getPolyline()
-      drawingLine.value.lineOnMap.on('mousedown', e => {
+      drawingLine.value.lineLayer = drawingLine.value.getPolyline()
+      drawingLine.value.lineLayer.on('mousedown', e => {
         console.log('mousedown on line', e, line)
         drawingLine.value = line
         isModifying.value = true
-        linesLayer.value.removeLayer(drawingLine.value.lineOnMap)
+        linesLayer.value.removeLayer(drawingLine.value.layerGroup)
       })
-      linesLayer.value.addLayer(drawingLine.value.lineOnMap)
+      drawingLine.value.layerGroup.addLayer(drawingLine.value.lineLayer)
+      linesLayer.value.addLayer(drawingLine.value.layerGroup)
       drawLinesLayer.value.clearLayers()
 
       if (drawingLine.value.stops.size > 1) {
         drawingLine.value.active = true
       } else {
+        drawLinesLayer.value.removeLayer(drawingLine.value.layerGroup)
         drawingLine.value.resetFromDrawing()
       }
 
@@ -207,6 +210,30 @@ onMounted(() => {
     const array = Array.from(stopsInBounds.values())
     addStopOnMap(array[Math.floor(Math.random() * array.length)])
   }, randomStopSpawnIntervalTime.value)
+
+
+  const fps = 60
+  const interval = 1000/fps
+  let then = Date.now()
+  let now = 0
+  let delta = 0
+  function gameTick(elapsedTime: number) {
+    now = Date.now();
+    delta = now - then;
+
+    if (delta > interval) {
+      then = now - (delta % interval);
+
+      for (const line of lineManager.value.lines.values()) {
+        if (line.active) {
+          line.update()
+        }
+      }
+    }
+
+    requestAnimationFrame(gameTick)
+  }
+  gameTick()
 })
 
 watch(zoomLevel, (newZoom) => {
@@ -260,5 +287,11 @@ defineExpose({
 .stop-marker-pin {
   width: 100px;
   text-align: center;
+}
+
+.bus-marker {
+  font-weight: 900;
+  font-size: 25px;
+  background-color: #616161;
 }
 </style>
