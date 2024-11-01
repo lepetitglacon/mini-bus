@@ -173,6 +173,11 @@ onMounted(() => {
         }
       }
 
+      if (isModifying.value) {
+        drawingLine.value.layerGroup.removeLayer(drawingLine.value.lineLayer)
+        drawLinesLayer.value.removeLayer(drawingLine.value.layerGroup)
+      }
+
       const line = drawingLine.value
       drawingLine.value.lineLayer = drawingLine.value.getPolyline()
       drawingLine.value.lineLayer.on('mousedown', e => {
@@ -181,6 +186,7 @@ onMounted(() => {
         isModifying.value = true
         linesLayer.value.removeLayer(drawingLine.value.layerGroup)
       })
+
       drawingLine.value.layerGroup.addLayer(drawingLine.value.lineLayer)
       linesLayer.value.addLayer(drawingLine.value.layerGroup)
       drawLinesLayer.value.clearLayers()
@@ -189,7 +195,7 @@ onMounted(() => {
         drawingLine.value.active = true
       } else {
         drawLinesLayer.value.removeLayer(drawingLine.value.layerGroup)
-        drawingLine.value.resetFromDrawing()
+        drawingLine.value.removeFromMap()
       }
 
       isDrawing.value = false

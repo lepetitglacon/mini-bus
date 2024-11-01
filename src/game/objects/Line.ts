@@ -23,7 +23,7 @@ export default class Line {
         this.color = color ?? this.color
     }
 
-    resetFromDrawing() {
+    removeFromMap() {
         this.bus.removeFromMap()
         this.stops.clear()
         this.layerGroup.clearLayers()
