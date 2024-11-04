@@ -99,79 +99,58 @@ export default class Bus {
 
         if (this.atStop) {
 
-            const graph = this.stopStore.getDestinationGraph()
-            console.log(graph)
-
-            if (this.nextOrCurrentStop.passengers.size > 0) {
-                for (const passenger of this.nextOrCurrentStop?.passengers) {
-                    const shortestPath = this.stopStore.findShortestPathFromStopIds(
-                        graph,
-                        this.nextOrCurrentStop.id,
-                        passenger.destination.id
-                    )
-                    console.log('--')
-                    console.log('for passenger', passenger, 'destination is ', passenger.destination.id)
-                    console.log('from ', this.nextOrCurrentStop.id)
-                    console.log('shortest path is ', shortestPath)
-                    // console.log()
+            const passengersToUnload = this.getPassengerToUnLoad()
+            if (passengersToUnload.length) {
+                if (this.onOffStart === 0) {
+                    this.onOffStart = performance.now()
                 }
+                if (this.onOffStart + this.passengerOnOffTime < performance.now()) {
+                    const passengerToDelete = passengersToUnload.pop()
+                    this.passengers.delete(passengerToDelete)
+                    this.stopStore.passengers.delete(passengerToDelete)
+                    this.onOffStart = 0
+                    this.gameStore.passengers++
+                    this.marker.fireEvent('game/bus/updateUi')
+                    // console.log('passenger unloaded')
+                }
+                return
+            } else {
+                // console.log('no one to unload')
             }
+            const passengersToLoad = this.getPassengerToLoad()
+            if (passengersToLoad.length) {
+                if (this.onOffStart === 0) {
+                    this.onOffStart = performance.now()
+                }
+                if (this.onOffStart + this.passengerOnOffTime < performance.now()) {
+                    const passenger = passengersToLoad.pop()
+                    this.passengers.add(passenger)
+                    this.nextOrCurrentStop.passengers.delete(passenger)
+                    this.nextOrCurrentStop.marker.fireEvent('game/stop/updateUi')
+                    this.marker.fireEvent('game/bus/updateUi')
+                    this.onOffStart = 0
+                    // console.log('passenger loaded')
+                }
+                return
+            } else {
+                // console.log('no one to load')
+            }
+            console.log('load/unload finished')
+            this.atStop = false
 
-            this.gameStore.gameOver = true
-            //
-            //
-            // const passengersToUnload = this.getPassengerToUnLoad()
-            // if (passengersToUnload.length) {
-            //     if (this.onOffStart === 0) {
-            //         this.onOffStart = performance.now()
-            //     }
-            //     if (this.onOffStart + this.passengerOnOffTime < performance.now()) {
-            //         const passengerToDelete = passengersToUnload.pop()
-            //         this.passengers.delete(passengerToDelete)
-            //         this.stopStore.passengers.delete(passengerToDelete)
-            //         this.onOffStart = 0
-            //         this.gameStore.passengers++
-            //         this.marker.fireEvent('game/bus/updateUi')
-            //         // console.log('passenger unloaded')
-            //     }
-            //     return
-            // } else {
-            //     // console.log('no one to unload')
-            // }
-            // const passengersToLoad = this.getPassengerToLoad()
-            // if (passengersToLoad.length) {
-            //     if (this.onOffStart === 0) {
-            //         this.onOffStart = performance.now()
-            //     }
-            //     if (this.onOffStart + this.passengerOnOffTime < performance.now()) {
-            //         const passenger = passengersToLoad.pop()
-            //         this.passengers.add(passenger)
-            //         this.nextOrCurrentStop.passengers.delete(passenger)
-            //         this.nextOrCurrentStop.marker.fireEvent('game/stop/updateUi')
-            //         this.marker.fireEvent('game/bus/updateUi')
-            //         this.onOffStart = 0
-            //         // console.log('passenger loaded')
-            //     }
-            //     return
-            // } else {
-            //     // console.log('no one to load')
-            // }
-            // console.log('load/unload finished')
-            // this.atStop = false
-            //
-            // // set next stop
-            // const stops = this.line.getStopsAsArray()
-            // const currentStopIndex = stops.indexOf(this.nextOrCurrentStop)
-            // this.lastStop = this.nextOrCurrentStop
-            // if (this.line.loop) {
-            //     this.nextOrCurrentStop = stops[(currentStopIndex + 1) % stops.length]
-            // } else {
-            //     const isLastOrFirstStop = currentStopIndex === stops.length - 1 || currentStopIndex === 0
-            //     if (isLastOrFirstStop) {
-            //         this.direction = !this.direction
-            //     }
-            //     this.nextOrCurrentStop = stops[this.direction ? currentStopIndex + 1 : currentStopIndex - 1]
-            // }
+            // set next stop
+            const stops = this.line.getStopsAsArray()
+            const currentStopIndex = stops.indexOf(this.nextOrCurrentStop)
+            this.lastStop = this.nextOrCurrentStop
+            if (this.line.loop) {
+                this.nextOrCurrentStop = stops[(currentStopIndex + 1) % stops.length]
+            } else {
+                const isLastOrFirstStop = currentStopIndex === stops.length - 1 || currentStopIndex === 0
+                if (isLastOrFirstStop) {
+                    this.direction = !this.direction
+                }
+                this.nextOrCurrentStop = stops[this.direction ? currentStopIndex + 1 : currentStopIndex - 1]
+            }
         }
 
         if (!this.atStop && this.marker && this.lastStop && this.nextOrCurrentStop) {
