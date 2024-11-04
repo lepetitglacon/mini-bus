@@ -4,15 +4,17 @@ import { defineStore } from 'pinia'
 export const useGameStore = defineStore('game', () => {
 
   const passengers = ref(0)
-  function addPassenger() {
-    passengers.value++
-  }
-
   const dezoom = ref(false)
+  const fpsTarget = ref(60)
+  const busStopsCharLenght = ref(6)
+
+  const gameOver = ref(false)
 
   return {
     passengers,
     dezoom,
-    addPassenger
+    fpsTarget,
+    busStopsCharLenght,
+    gameOver
   }
 })

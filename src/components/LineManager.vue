@@ -1,7 +1,7 @@
 <template>
 
-  <div style="display: flex">
-    <div v-for="line of lines" :style="{
+  <div class="container" style="display: flex">
+    <div v-for="line of lineStore.lines" :style="{
           backgroundColor: line.color,
           width: '100px',
           height: '100px',
@@ -15,26 +15,21 @@
 </template>
 
 <script setup lang="ts">
-
-import {ref} from "vue";
 import Line from "@/game/objects/Line";
+import {useLinesStore} from "@/stores/lines";
 
-const lines = ref<Set<Line>>(new Set())
-lines.value.add(new Line(1))
-lines.value.add(new Line(2, '#884466'))
+const lineStore = useLinesStore()
 
-function getFreeLine() {
-  for (const line of lines.value.values()) {
-    if (!line.active) {
-      return line
-    }
-  }
-  return null
-}
-
-defineExpose({
-  lines,
-  getFreeLine
-})
-
+lineStore.lines.add(new Line(1, '#00abc4'))
+lineStore.lines.add(new Line(2, '#338866'))
+lineStore.lines.add(new Line(3, '#884466'))
 </script>
+
+<style scoped>
+.container {
+  position: absolute;
+  top: 0;
+  left: 25%;
+  z-index: 9999999999;
+}
+</style>

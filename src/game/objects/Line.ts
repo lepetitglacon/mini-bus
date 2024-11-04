@@ -95,12 +95,16 @@ export default class Line {
         };
     }
 
-    update() {
-        this.bus.update()
+    update(delta) {
+        this.bus.update(delta)
     }
 
     toString() {
         return JSON.stringify(this, (key, value) => {
+            if (key.endsWith('Store')) {
+                return undefined
+            }
+
             switch (key) {
                 case 'lineLayer':
                 case 'layerGroup':
@@ -108,6 +112,7 @@ export default class Line {
                 case 'customIcon':
                 case 'line':
                 case 'destination':
+                case 'gameStore':
                 case 'gameStore':
                     return undefined
                 case 'stops':

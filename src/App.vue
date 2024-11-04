@@ -1,10 +1,11 @@
 <template>
-  <Engine/>
+  <Map/>
 </template>
 
 <script setup lang="ts">
+import './assets/base.css'
 import 'leaflet/dist/leaflet.css'
-import Engine from "@/components/Engine.vue";
+import Map from "@/components/Map.vue";
 </script>
 
 <style scoped>

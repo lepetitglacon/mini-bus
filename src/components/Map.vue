@@ -1,15 +1,47 @@
 <template>
-  <div id="map"></div>
-  <p>passengers {{gameStore.passengers}}</p>
 
-  <div style="height: 200px; line-break: anywhere">
-    <pre v-if="isDrawing || isModifying">{{drawingLine}}</pre>
-    <pre v-if="isDrawing || isModifying">{{ drawingCurrentStop }}</pre>
+  <div class="container">
+
+    <div class="col">
+      <div id="map"></div>
+      <LineManager ref="lineManager"/>
+    </div>
+
+    <div class="col">
+
+      <Passengers/>
+
+      <div>
+        Game over: {{ gameStore.gameOver }}
+      </div>
+
+      <div class="fpsTarget-container">
+        <label  for="fpsTarget">
+          Game ticks : {{ gameStore.fpsTarget }}
+        </label>
+        <button @click="gameStore.fpsTarget = 60">Reset</button>
+        <input v-model="gameStore.fpsTarget" min="30" max="240" type="range" name="fpsTarget" id="fpsTarget">
+      </div>
+
+      <div>
+        passenger spawn rate: {{ stopStore.passengerSpawnRate }}
+        <input v-model="stopStore.passengerSpawnRate" min="0" max="10000" step="500" type="range" >
+      </div>
+
+      <p>passengers {{gameStore.passengers}}</p>
+
+      <div style="height: 200px; line-break: anywhere">
+<!--        <pre v-if="isDrawing || isModifying">{{drawingLine}}</pre>-->
+<!--        <pre v-if="isDrawing || isModifying">{{ drawingCurrentStop }}</pre>-->
+      </div>
+
+      <p>stops on map {{stopsOnMap.size}}</p>
+      <p>stops in bounds {{stopsInBounds.size}}</p>
+      <p>{{zoomLevel}}</p>
+    </div>
   </div>
 
-  <p>stops on map {{stopsOnMap.size}}</p>
-  <p>stops in bounds {{stopsInBounds.size}}</p>
-  <p>{{zoomLevel}}</p>
+
 </template>
 
 <script setup lang="ts">
@@ -18,7 +50,10 @@ import L, {polyline} from "leaflet";
 import {useStopsStore} from "@/stores/stops";
 import Stop from "@/game/objects/Stop";
 import {useGameStore} from "@/stores/game";
+import {useLinesStore} from "@/stores/lines";
 import type Line from "@/game/objects/Line";
+import LineManager from "@/components/LineManager.vue";
+import Passengers from "@/components/Passengers.vue";
 
 const map = ref()
 const center = ref([47.23510156121514, 6.025931239128114])
@@ -32,8 +67,6 @@ const stopsLayer = ref<L.LayerGroup>(new L.layerGroup())
 const linesLayer = ref<L.LayerGroup>(new L.layerGroup())
 const drawLinesLayer = ref<L.LayerGroup>(new L.layerGroup())
 
-const lineManager = inject('lineManager')
-
 const drawSnapDistance = ref(10) // meters
 const isDrawing = ref(false)
 const drawingLine = ref<Line|null>(null)
@@ -43,6 +76,8 @@ const modifyingInfo = ref(null)
 
 const {stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopFromLatLng} = useStopsStore()
 const gameStore = useGameStore()
+const lineStore = useLinesStore()
+const stopStore = useStopsStore()
 
 onMounted(() => {
   map.value = L.map('map', {
@@ -70,7 +105,7 @@ onMounted(() => {
   })
 
   map.value.on('mousedown', e => {
-    const line = lineManager.value.getFreeLine()
+    const line = lineStore.getFreeLine()
     if (line) {
       const closestPointInfo = getClosestStopFromLatLng(map.value, [e.latlng.lat, e.latlng.lng])
       console.log(closestPointInfo)
@@ -218,26 +253,39 @@ onMounted(() => {
   }, randomStopSpawnIntervalTime.value)
 
 
-  const fps = 60
-  const interval = 1000/fps
+
   let then = Date.now()
   let now = 0
   let delta = 0
+  let reqCancel = 0
   function gameTick(elapsedTime: number) {
+    const tickPerSecond = gameStore.fpsTarget
+    const interval = 1000/tickPerSecond
     now = Date.now();
     delta = now - then;
 
     if (delta > interval) {
       then = now - (delta % interval);
 
-      for (const line of lineManager.value.lines.values()) {
+      for (const stop of stopStore.stops) {
+        if (stop.passengers.size > 0) {
+          for (const passenger of stop.passengers) {
+            passenger.update()
+          }
+        }
+      }
+
+      for (const line of lineStore.lines.values()) {
         if (line.active) {
-          line.update()
+          line.update(delta)
         }
       }
     }
 
-    requestAnimationFrame(gameTick)
+    reqCancel = requestAnimationFrame(gameTick)
+    if (gameStore.gameOver) {
+      window.cancelAnimationFrame(reqCancel)
+    }
   }
   gameTick()
 })
@@ -270,7 +318,24 @@ defineExpose({
 </script>
 
 <style>
-#map { height: 50vh}
+.container {
+  display: flex;
+  width: 100vw;
+}
+.col {
+  flex-basis: 50%;
+}
+
+#map {
+  width: 100%;
+  height: 100vh;
+}
+
+.fpsTarget-container {
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+}
 
 .custom-div-icon {
   background-color: white;
@@ -299,5 +364,13 @@ defineExpose({
   font-weight: 900;
   font-size: 25px;
   background-color: #616161;
+}
+.bus-marker-passenger {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  font-weight: 700;
+  text-align: center;
+  color: white;
 }
 </style>

@@ -1,20 +1,24 @@
 import type Stop from "@/game/objects/Stop";
+import {useGameStore} from "@/stores/game";
 
 export default class Passenger {
 
     public destination: Stop;
-    public waitingTime: number;
-    public waitingTimeMax: 30000;
+    public waitingTimeStart: number;
+    public waitingTimeMax = 60000;
+    private gameStore
 
     constructor(destination: Stop) {
         this.destination = destination
-        this.waitingTime = performance.now()
+        this.waitingTimeStart = Date.now()
+        this.gameStore = useGameStore()
     }
 
     update() {
-        if (this.waitingTime + this.waitingTimeMax > performance.now()) {
+        if (this.waitingTimeStart + this.waitingTimeMax < Date.now()) {
             console.error('le passager à trop attendu')
-            throw ('le passager à trop attendu')
+            this.gameStore.gameOver = true
+            this.gameStore.fpsTarget = 0
         }
     }
 }

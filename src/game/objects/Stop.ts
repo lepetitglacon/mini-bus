@@ -32,7 +32,7 @@ export default class Stop {
             title: this.name,
             riseOnHover: true
         })
-        this.marker.on('game:change', e => {
+        this.marker.on('game/stop/updateUi', e => {
             const stopsDiv = this.marker?.getElement()?.querySelector('.stop-marker-stops')
             stopsDiv.innerHTML = ''
             const passengersByDestination = Array.from(this.passengers.values()).reduce((acc, passenger) => {
