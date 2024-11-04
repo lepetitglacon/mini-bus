@@ -11,10 +11,6 @@
 
       <Passengers/>
 
-      <div>
-        Game over: {{ gameStore.gameOver }}
-      </div>
-
       <div class="fpsTarget-container">
         <label  for="fpsTarget">
           Game ticks : {{ gameStore.fpsTarget }}
@@ -29,11 +25,6 @@
       </div>
 
       <p>passengers {{gameStore.passengers}}</p>
-
-      <div style="height: 200px; line-break: anywhere">
-<!--        <pre v-if="isDrawing || isModifying">{{drawingLine}}</pre>-->
-<!--        <pre v-if="isDrawing || isModifying">{{ drawingCurrentStop }}</pre>-->
-      </div>
 
       <p>stops on map {{stopsOnMap.size}}</p>
       <p>stops in bounds {{stopsInBounds.size}}</p>
@@ -53,7 +44,8 @@ import {useGameStore} from "@/stores/game";
 import {useLinesStore} from "@/stores/lines";
 import type Line from "@/game/objects/Line";
 import LineManager from "@/components/LineManager.vue";
-import Passengers from "@/components/Passengers.vue";
+import Passengers from "@/components/Passengers/Passengers.vue";
+import WeekDay from "@/components/WeekDay.vue";
 
 const map = ref()
 const center = ref([47.23510156121514, 6.025931239128114])
@@ -258,7 +250,7 @@ onMounted(() => {
   let now = 0
   let delta = 0
   let reqCancel = 0
-  function gameTick(elapsedTime: number) {
+  function gameTick() {
     const tickPerSecond = gameStore.fpsTarget
     const interval = 1000/tickPerSecond
     now = Date.now();
@@ -283,7 +275,7 @@ onMounted(() => {
     }
 
     reqCancel = requestAnimationFrame(gameTick)
-    if (gameStore.gameOver) {
+    if (gameStore.state === gameStore.gameStates.GAME_OVER) {
       window.cancelAnimationFrame(reqCancel)
     }
   }

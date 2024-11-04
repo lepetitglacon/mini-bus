@@ -17,8 +17,7 @@ export default class Passenger {
     update() {
         if (this.waitingTimeStart + this.waitingTimeMax < Date.now()) {
             console.error('le passager à trop attendu')
-            this.gameStore.gameOver = true
-            this.gameStore.fpsTarget = 0
+            this.gameStore.state = this.gameStore.gameStates.GAME_OVER
         }
     }
 }

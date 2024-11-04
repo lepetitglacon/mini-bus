@@ -1,17 +1,23 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import * as turf from '@turf/turf'
-import Stop from "@/game/objects/Stop";
-
-import stopsFromJSON from "@/assets/json/stops.json";
-import L from "leaflet";
-import Passenger from "@/game/objects/Passenger";
-import type Line from "@/game/objects/Line";
+import Line from "@/game/objects/Line";
 
 
 export const useLinesStore = defineStore('lines', () => {
 
   const lines = ref(new Set<Line>())
+  setInitialLines()
+
+  function setInitialLines() {
+    lines.value.add(new Line(1, '#00abc4'))
+    lines.value.add(new Line(2, '#338866'))
+    lines.value.add(new Line(3, '#884466'))
+  }
+
+  const reset = () => {
+    lines.value.clear()
+    setInitialLines()
+  }
 
   function linesAsArray() {
     return Array.from(lines.value.values())
@@ -27,6 +33,8 @@ export const useLinesStore = defineStore('lines', () => {
   }
 
   return {
+    reset,
+
     lines,
     linesAsArray,
     getFreeLine

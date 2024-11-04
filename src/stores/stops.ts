@@ -9,8 +9,10 @@ import Passenger from "@/game/objects/Passenger";
 import {useLinesStore} from "@/stores/lines";
 import {useGameStore} from "@/stores/game";
 
-
 export const useStopsStore = defineStore('stops', () => {
+
+  const lineStore = useLinesStore()
+  const gameStore = useGameStore()
 
   const stops = ref(new Set<Stop>())
   const stopsInBounds = ref(new Set<Stop>())
@@ -20,21 +22,18 @@ export const useStopsStore = defineStore('stops', () => {
   const passengerSpawnRate = ref(1000)
   const passengerSpawnRateMax = ref(passengerSpawnRate.value * 2)
 
-  const lineStore = useLinesStore()
-  const gameStore = useGameStore()
+  const reset = () => {
+    passengers.value.clear()
 
-  setInterval(() => {
-    if (stopsOnMap.value.size > 1 && !gameStore.gameOver) {
-      const stops = Array.from(stopsOnMap.value.values())
-      const randomStop = stops[Math.floor(Math.random() * stops.length)]
-      stops.splice(stops.indexOf(randomStop), 1)
-      const passenger = new Passenger(stops[Math.floor(Math.random() * stops.length)])
-      passengers.value.add(passenger)
-      randomStop.passengers.add(passenger)
-      randomStop.marker?.fireEvent('game/stop/updateUi')
+    for (const stop of stops.value) {
+      stop.passengers.clear()
     }
-  }, Math.random() * (passengerSpawnRate.value - passengerSpawnRateMax.value) + passengerSpawnRateMax.value)
 
+    stopsOnMap.value.clear()
+    stopsInBounds.value.clear()
+  }
+
+  // load stops from json
   for (const stopJSON of stopsFromJSON) {
     const stop = new Stop(
         stopJSON.id,
@@ -46,6 +45,18 @@ export const useStopsStore = defineStore('stops', () => {
     )
     stops.value.add(stop)
   }
+
+  setInterval(() => {
+    if (stopsOnMap.value.size > 1 && gameStore.state !== gameStore.gameStates.GAME_OVER) {
+      const stops = Array.from(stopsOnMap.value.values())
+      const randomStop = stops[Math.floor(Math.random() * stops.length)]
+      stops.splice(stops.indexOf(randomStop), 1)
+      const passenger = new Passenger(stops[Math.floor(Math.random() * stops.length)])
+      passengers.value.add(passenger)
+      randomStop.passengers.add(passenger)
+      randomStop.marker?.fireEvent('game/stop/updateUi')
+    }
+  }, Math.random() * (passengerSpawnRate.value - passengerSpawnRateMax.value) + passengerSpawnRateMax.value)
 
   function getStopsInBound(map: L.Map) {
     for (const stop of Array.from(stops.value.values())) {
@@ -183,6 +194,8 @@ export const useStopsStore = defineStore('stops', () => {
   }
 
   return {
+    reset,
+
     stops,
     stopsInBounds,
     stopsOnMap,

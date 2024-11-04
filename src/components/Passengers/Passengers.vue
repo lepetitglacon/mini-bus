@@ -9,12 +9,8 @@
 </template>
 
 <script setup lang="ts">
-import {useGameStore} from "@/stores/game";
-import {useLinesStore} from "@/stores/lines";
 import {useStopsStore} from "@/stores/stops";
 
-const gameStore = useGameStore()
-const lineStore = useLinesStore()
 const stopStore = useStopsStore()
 </script>
 

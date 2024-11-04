@@ -19,10 +19,6 @@ import Line from "@/game/objects/Line";
 import {useLinesStore} from "@/stores/lines";
 
 const lineStore = useLinesStore()
-
-lineStore.lines.add(new Line(1, '#00abc4'))
-lineStore.lines.add(new Line(2, '#338866'))
-lineStore.lines.add(new Line(3, '#884466'))
 </script>
 
 <style scoped>
