@@ -4,7 +4,8 @@
 
     <div class="col">
       <div id="map"></div>
-      <LineManager ref="lineManager"/>
+      <LineManager/>
+      <WeekDay/>
     </div>
 
     <div class="col">
