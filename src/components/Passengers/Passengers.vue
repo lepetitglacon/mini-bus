@@ -2,7 +2,9 @@
   <div class="col">
     <div  class="passengers-container">
       <div v-for="passenger of stopStore.passengers">
-        {{ passenger.destination.id }} {{ passenger.waitingTimeStart + passenger.waitingTimeMax - Date.now()}}
+        <Passenger
+          :passenger="passenger"
+        />
       </div>
     </div>
   </div>
@@ -10,6 +12,7 @@
 
 <script setup lang="ts">
 import {useStopsStore} from "@/stores/stops";
+import Passenger from "@/components/Passengers/Passenger.vue";
 
 const stopStore = useStopsStore()
 </script>

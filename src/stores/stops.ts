@@ -30,7 +30,6 @@ export const useStopsStore = defineStore('stops', () => {
     }
 
     stopsOnMap.value.clear()
-    stopsInBounds.value.clear()
   }
 
   // load stops from json

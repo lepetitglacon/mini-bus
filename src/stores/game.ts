@@ -32,7 +32,7 @@ export const useGameStore = defineStore('game', () => {
   const currentWeekDay = ref(weekDays[0])
   const currentWeekDayIntervalTime = ref(10000)
   const currentWeekDayInterval = setInterval(() => {
-    currentWeekDay.value = weekDays[weekDays.indexOf(currentWeekDay.value) + 1 % weekDays.length]
+    currentWeekDay.value = weekDays[weekDays.indexOf(currentWeekDay.value) + 1 % weekDays.length - 1]
     if (weekDays.indexOf(currentWeekDay.value) == 6) {
       console.log('time to upgrade')
     }
