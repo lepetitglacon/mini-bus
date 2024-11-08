@@ -30,13 +30,31 @@ export const useGameStore = defineStore('game', () => {
   const busStopsCharLenght = ref(6)
 
   const currentWeekDay = ref(weekDays[0])
-  const currentWeekDayIntervalTime = ref(10000)
+  const currentWeekDayIntervalTime = ref(1000)
   const currentWeekDayInterval = setInterval(() => {
-    currentWeekDay.value = weekDays[weekDays.indexOf(currentWeekDay.value) + 1 % weekDays.length - 1]
-    if (weekDays.indexOf(currentWeekDay.value) == 6) {
-      console.log('time to upgrade')
+    if (state.value !== gameStates.SHOP) {
+      currentWeekDay.value = weekDays[weekDays.indexOf(currentWeekDay.value) + 1]
+      if (weekDays.indexOf(currentWeekDay.value) == 6) {
+        console.log('time to upgrade')
+        state.value = gameStates.SHOP
+      }
     }
   }, currentWeekDayIntervalTime.value)
+
+  const shopItems = ref([
+    {
+      'name': 'Line'
+    },
+    {
+      'name': 'Bridge'
+    },
+    {
+      'name': 'Tram'
+    },
+    {
+      'name': 'Double Decker'
+    }
+  ])
 
   return {
     gameStates,
@@ -44,7 +62,7 @@ export const useGameStore = defineStore('game', () => {
     reset,
 
     weekDays,
-
+    shopItems,
 
     passengers,
     dezoom,
