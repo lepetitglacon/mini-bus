@@ -45,7 +45,7 @@ export const useStopsStore = defineStore('stops', () => {
     stops.value.add(stop)
   }
 
-  // create passengers
+  // spawn passengers at stops
   setInterval(() => {
     if (stopsOnMap.value.size > 1 && gameStore.state !== gameStore.gameStates.GAME_OVER) {
       const stops = Array.from(stopsOnMap.value.values())

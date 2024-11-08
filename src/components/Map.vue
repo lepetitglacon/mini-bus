@@ -3,6 +3,7 @@
   <div class="container">
 
     <div class="col">
+      <Shop v-if="gameStore.state === gameStore.gameStates.SHOP"/>
       <div id="map"></div>
       <LineManager/>
       <WeekDay/>
@@ -50,6 +51,7 @@ import Passengers from "@/components/Passengers/Passengers.vue";
 import WeekDay from "@/components/WeekDay.vue";
 import PassengersManager from "@/game/manager/PassengersManager";
 import UnlockModal from "@/components/UnlockModal.vue";
+import Shop from "@/components/Shop.vue";
 
 const map = ref()
 const center = ref([47.23510156121514, 6.025931239128114])
