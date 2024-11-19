@@ -3,7 +3,7 @@ const props = defineProps(['passengerManager'])
 </script>
 
 <template>
-<div>
+<div class="passengers-container">
 	<h2>Last Unlock</h2>
 
 	{{passengerManager.currentState}}
@@ -18,5 +18,7 @@ const props = defineProps(['passengerManager'])
 </template>
 
 <style scoped>
-
+.passengers-container {
+  position: absolute;
+}
 </style>

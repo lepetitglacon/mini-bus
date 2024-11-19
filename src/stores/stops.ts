@@ -197,6 +197,7 @@ export const useStopsStore = defineStore('stops', () => {
   return {
     reset,
 
+    stopsFromJSON,
     stops,
     stopsInBounds,
     stopsOnMap,

@@ -2,38 +2,13 @@
 
   <div class="container">
 
-    <div class="col">
-      <Shop v-if="gameStore.state === gameStore.gameStates.SHOP"/>
+    <div class="">
+
       <div id="map"></div>
-      <LineManager/>
-      <WeekDay/>
+      <StopComponent v-for="stop of stopsOnMap" :stop="stop" :map="map"/>
+
     </div>
 
-    <div class="col">
-
-	    <UnlockModal v-if="gameStore.state === gameStore.gameStates.UNLOCK_MODAL" :passengerManager="passengerManager"/>
-
-      <Passengers/>
-
-      <div class="fpsTarget-container">
-        <label  for="fpsTarget">
-          Game ticks : {{ gameStore.fpsTarget }}
-        </label>
-        <button @click="gameStore.fpsTarget = 60">Reset</button>
-        <input v-model="gameStore.fpsTarget" min="30" max="240" type="range" name="fpsTarget" id="fpsTarget">
-      </div>
-
-      <div>
-        passenger spawn rate: {{ stopStore.passengerSpawnRate }}
-        <input v-model="stopStore.passengerSpawnRate" min="0" max="10000" step="500" type="range" >
-      </div>
-
-      <p>passengers {{gameStore.passengers}}</p>
-
-      <p>stops on map {{stopsOnMap.size}}</p>
-      <p>stops in bounds {{stopsInBounds.size}}</p>
-      <p>{{zoomLevel}}</p>
-    </div>
   </div>
 
 
@@ -44,15 +19,16 @@ import {inject, onMounted, ref, watch} from "vue";
 import L, {polyline} from "leaflet";
 import {useStopsStore} from "@/stores/stops";
 import Stop from "@/game/objects/Stop";
+import {default as StopComponent}  from "@/components/stop/Stop.vue";
 import {useGameStore} from "@/stores/game";
 import {useLinesStore} from "@/stores/lines";
 import type Line from "@/game/objects/Line";
-import LineManager from "@/components/LineManager.vue";
+import LineManager from "@/components/ui/LineManager.vue";
 import Passengers from "@/components/Passengers/Passengers.vue";
-import WeekDay from "@/components/WeekDay.vue";
-import Shop from "@/components/Shop.vue";
+import WeekDay from "@/components/ui/WeekDay.vue";
 import PassengersManager from "@/game/manager/PassengersManager";
-import UnlockModal from "@/components/UnlockModal.vue";
+import UnlockModal from "@/components/ui/UnlockModal.vue";
+import Shop from "@/components/ui/Shop.vue";
 
 const map = ref()
 const center = ref([47.23510156121514, 6.025931239128114])
@@ -73,7 +49,7 @@ const drawingCurrentStop = ref<Stop|null>(null)
 const isModifying = ref(false)
 const modifyingInfo = ref(null)
 
-const {stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopFromLatLng} = useStopsStore()
+const {stopsFromJSON, stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopFromLatLng} = useStopsStore()
 const gameStore = useGameStore()
 const lineStore = useLinesStore()
 const stopStore = useStopsStore()
@@ -248,10 +224,10 @@ onMounted(() => {
     }
   }, Math.random() * (dezoomIntervalTime.value - 500) + 500)
 
-  const randomStopSpawnInterval = setInterval(() => {
-    const array = Array.from(stopsInBounds.values())
-    addStopOnMap(array[Math.floor(Math.random() * array.length)])
-  }, randomStopSpawnIntervalTime.value)
+  // const randomStopSpawnInterval = setInterval(() => {
+  //   const array = Array.from(stopsInBounds.values())
+  //   addStopOnMap(array[Math.floor(Math.random() * array.length)])
+  // }, randomStopSpawnIntervalTime.value)
 
 
 
@@ -308,10 +284,10 @@ watch(stopsOnMap, (old, stopsOnMap) => {
   }
 })
 
-const stop = new Stop('test 1', [47.23595, 6.02525], 'Test 1')
-stopsOnMap.add(stop)
-const stop2 = new Stop('test 2', [47.2355, 6.0255], 'Test 2')
-stopsOnMap.add(stop2)
+// const stop = new Stop('test 1', [47.23595, 6.02525], 'Test 1')
+// stopsOnMap.add(stop)
+// const stop2 = new Stop('test 2', [47.2355, 6.0255], 'Test 2')
+// stopsOnMap.add(stop2)
 
 defineExpose({
   map,
@@ -330,7 +306,7 @@ defineExpose({
 }
 
 #map {
-  width: 100%;
+  width: 100vw;
   height: 100vh;
 }
 

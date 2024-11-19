@@ -13,10 +13,12 @@ const gameStore = useGameStore()
 <style scoped>
 .weekday-container {
 	position: absolute;
-	top: 0;
-	left: 0;
+  top: 0;
 	display: flex;
-	z-index: 99999999;
+  justify-content: start;
+  align-items: start;
+
+	z-index: 400;
 	background-color: rgba(255, 255, 255, 0.8);
 }
 </style>

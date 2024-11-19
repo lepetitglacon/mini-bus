@@ -33,7 +33,7 @@ export const useGameStore = defineStore('game', () => {
   const busStopsCharLenght = ref(6)
 
   const currentWeekDay = ref(weekDays[0])
-  const currentWeekDayIntervalTime = ref(1000)
+  const currentWeekDayIntervalTime = ref(15000)
   const currentWeekDayInterval = setInterval(() => {
     if (state.value !== gameStates.SHOP) {
       currentWeekDay.value = weekDays[weekDays.indexOf(currentWeekDay.value) + 1]

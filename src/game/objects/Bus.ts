@@ -59,6 +59,11 @@ export default class Bus {
     }
 
     update(delta) {
+
+        if (this.gameStore.state === this.gameStore.gameStates.SHOP) {
+            return
+        }
+
         if (!this.lastStop) {
             const stops = this.line.getStopsAsArray()
             this.lastStop = stops[stops.length - 1]
