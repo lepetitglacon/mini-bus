@@ -28,6 +28,7 @@
         <input v-model="stopStore.passengerSpawnRate" min="0" max="10000" step="500" type="range" >
       </div>
 
+      <p>passengers {{gameStore.passengers}}</p>
 
       <p>stops on map {{stopsOnMap.size}}</p>
       <p>stops in bounds {{stopsInBounds.size}}</p>
@@ -49,9 +50,9 @@ import type Line from "@/game/objects/Line";
 import LineManager from "@/components/LineManager.vue";
 import Passengers from "@/components/Passengers/Passengers.vue";
 import WeekDay from "@/components/WeekDay.vue";
+import Shop from "@/components/Shop.vue";
 import PassengersManager from "@/game/manager/PassengersManager";
 import UnlockModal from "@/components/UnlockModal.vue";
-import Shop from "@/components/Shop.vue";
 
 const map = ref()
 const center = ref([47.23510156121514, 6.025931239128114])
