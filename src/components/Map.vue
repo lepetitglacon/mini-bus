@@ -10,6 +10,8 @@
 
     <div class="col">
 
+	    <UnlockModal v-if="gameStore.state === gameStore.gameStates.UNLOCK_MODAL" :passengerManager="passengerManager"/>
+
       <Passengers/>
 
       <div class="fpsTarget-container">
@@ -25,7 +27,6 @@
         <input v-model="stopStore.passengerSpawnRate" min="0" max="10000" step="500" type="range" >
       </div>
 
-      <p>passengers {{gameStore.passengers}}</p>
 
       <p>stops on map {{stopsOnMap.size}}</p>
       <p>stops in bounds {{stopsInBounds.size}}</p>
@@ -47,6 +48,8 @@ import type Line from "@/game/objects/Line";
 import LineManager from "@/components/LineManager.vue";
 import Passengers from "@/components/Passengers/Passengers.vue";
 import WeekDay from "@/components/WeekDay.vue";
+import PassengersManager from "@/game/manager/PassengersManager";
+import UnlockModal from "@/components/UnlockModal.vue";
 
 const map = ref()
 const center = ref([47.23510156121514, 6.025931239128114])
@@ -71,6 +74,8 @@ const {stopsOnMap, stopsInBounds, getStopsInBound, addStopOnMap, getClosestStopF
 const gameStore = useGameStore()
 const lineStore = useLinesStore()
 const stopStore = useStopsStore()
+
+const passengerManager = new PassengersManager()
 
 onMounted(() => {
   map.value = L.map('map', {
@@ -259,6 +264,8 @@ onMounted(() => {
 
     if (delta > interval) {
       then = now - (delta % interval);
+
+	  passengerManager.update()
 
       for (const stop of stopStore.stops) {
         if (stop.passengers.size > 0) {

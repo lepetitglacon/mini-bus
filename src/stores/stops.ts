@@ -45,11 +45,13 @@ export const useStopsStore = defineStore('stops', () => {
     stops.value.add(stop)
   }
 
+  // create passengers
   setInterval(() => {
     if (stopsOnMap.value.size > 1 && gameStore.state !== gameStore.gameStates.GAME_OVER) {
       const stops = Array.from(stopsOnMap.value.values())
       const randomStop = stops[Math.floor(Math.random() * stops.length)]
       stops.splice(stops.indexOf(randomStop), 1)
+
       const passenger = new Passenger(stops[Math.floor(Math.random() * stops.length)])
       passengers.value.add(passenger)
       randomStop.passengers.add(passenger)

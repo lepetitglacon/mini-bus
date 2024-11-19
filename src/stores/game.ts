@@ -8,12 +8,15 @@ const gameStates = {
   RUNNING: 'running',
   GAME_OVER: 'game over',
   SHOP: 'shop',
+  UNLOCK_MODAL: 'unlock modal',
 }
 
 export const useGameStore = defineStore('game', () => {
 
   const lineStore = useLinesStore()
   const stopStore = useStopsStore()
+
+
 
   const state = ref(gameStates.RUNNING)
   const reset = () => {
