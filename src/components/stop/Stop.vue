@@ -1,21 +1,14 @@
 <script setup lang="ts">
-import {inject, onMounted, ref} from "vue";
-import L from "leaflet";
+import {useStopsStore} from "@/stores/stops";
 
-const props = defineProps(['stop'])
-const map = ref(props.map)
-
-onMounted(() => {
-  const marker = ref(new L.Marker([props.stop.latitude, props.stop.longitude], {
-    // icon: props.stop.customIcon,
-    // title: props.stop.name,
-    riseOnHover: true
-  }))
-  console.log(map)
-})
+const stopStore = useStopsStore()
 </script>
 
 <template>
+
+	<div v-for="stop of stopStore.stopsOnMap">
+		{{ stop.name }}
+	</div>
 
 </template>
 

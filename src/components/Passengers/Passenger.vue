@@ -20,7 +20,7 @@ now.value = Date.now()
 
 <template>
   <div>
-    <p>{{ passenger.destination.id }} <span :style="style">{{ timeLeft }}</span></p>
+    <p>{{ passenger.destination?.id }} <span :style="style">{{ timeLeft }}</span></p>
   </div>
 </template>
 

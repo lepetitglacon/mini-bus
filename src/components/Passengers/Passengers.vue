@@ -8,7 +8,7 @@
       </div>
 
       <div class="">
-        <div v-for="passenger of stopStore.passengers">
+        <div v-for="passenger of passengerStore.passengers">
           <Passenger
               :passenger="passenger"
           />
@@ -23,17 +23,20 @@
 import passengerIcon from '@/assets/img/passenger.png'
 
 import {useStopsStore} from "@/stores/stops";
-import Passenger from "@/components/Passengers/Passenger.vue";
 import {useGameStore} from "@/stores/game";
+import Passenger from "@/components/Passengers/Passenger.vue";
+import {usePassengerStore} from "@/stores/passengers";
 
 const stopStore = useStopsStore()
 const gameStore = useGameStore()
+const passengerStore = usePassengerStore()
 </script>
 
 <style scoped>
 .passengers-container {
   position: absolute;
   top: 0;
+
   display: flex;
   align-items: center;
   justify-content: end;
@@ -41,11 +44,12 @@ const gameStore = useGameStore()
   width: 100vw;
   height: 100vh;
 
-  z-index: 400;
 
   color: black;
 }
 .passengers-inner {
+	pointer-events: all;
+	z-index: 400;
 
   height: 80vh;
   width: 20vw;

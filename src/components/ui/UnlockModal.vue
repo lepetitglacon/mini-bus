@@ -1,15 +1,18 @@
 <script setup lang="ts">
+import {useGameStore} from "@/stores/game";
+
 const props = defineProps(['passengerManager'])
+const gameStore = useGameStore()
 </script>
 
 <template>
 <div class="passengers-container">
 	<h2>Last Unlock</h2>
 
-	{{passengerManager.currentState}}
+	{{gameStore.level}}
 
 	<div>
-		<div v-for="item of Object.values(passengerManager.states)[passengerManager.currentState - 1]">
+		<div v-for="item of Object.values(gameStore.levels)[passengerManager.currentState - 1]">
 			{{ item }}
 		</div>
 	</div>

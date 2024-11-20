@@ -64,9 +64,11 @@ onMounted(() => {
     scrollWheelZoom: false,
     doubleClickZoom: false,
   })
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}', {
+	  minZoom: 0,
+	  maxZoom: 20,
+	  attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	  ext: 'png'
   }).addTo(map.value);
   map.value.setView(center.value, zoomLevel.value)
 
@@ -231,42 +233,7 @@ onMounted(() => {
 
 
 
-  let then = Date.now()
-  let now = 0
-  let delta = 0
-  let reqCancel = 0
-  function gameTick() {
-    const tickPerSecond = gameStore.fpsTarget
-    const interval = 1000/tickPerSecond
-    now = Date.now();
-    delta = now - then;
 
-    if (delta > interval) {
-      then = now - (delta % interval);
-
-	  passengerManager.update()
-
-      for (const stop of stopStore.stops) {
-        if (stop.passengers.size > 0) {
-          for (const passenger of stop.passengers) {
-            passenger.update()
-          }
-        }
-      }
-
-      for (const line of lineStore.lines.values()) {
-        if (line.active) {
-          line.update(delta)
-        }
-      }
-    }
-
-    reqCancel = requestAnimationFrame(gameTick)
-    if (gameStore.state === gameStore.gameStates.GAME_OVER) {
-      window.cancelAnimationFrame(reqCancel)
-    }
-  }
-  gameTick()
 })
 
 watch(zoomLevel, (newZoom) => {
@@ -284,10 +251,10 @@ watch(stopsOnMap, (old, stopsOnMap) => {
   }
 })
 
-// const stop = new Stop('test 1', [47.23595, 6.02525], 'Test 1')
-// stopsOnMap.add(stop)
-// const stop2 = new Stop('test 2', [47.2355, 6.0255], 'Test 2')
-// stopsOnMap.add(stop2)
+const stop = new Stop('test 1', [47.23595, 6.02525], 'Test 1')
+stopsOnMap.add(stop)
+const stop2 = new Stop('test 2', [47.2355, 6.0255], 'Test 2')
+stopsOnMap.add(stop2)
 
 defineExpose({
   map,

@@ -6,6 +6,7 @@ import type Stop from "@/game/objects/Stop";
 import {useGameStore} from "@/stores/game";
 import {useLinesStore} from "@/stores/lines";
 import {useStopsStore} from "@/stores/stops";
+import {usePassengerStore} from "@/stores/passengers";
 
 type ConnectedLineInfo = {
     passenger: Passenger,
@@ -18,6 +19,7 @@ export default class Bus {
     public gameStore
     public lineStore
     public stopStore
+    public passengerStore
 
     public active = false
     public line: Line
@@ -56,6 +58,7 @@ export default class Bus {
         this.gameStore = useGameStore()
         this.lineStore = useLinesStore()
         this.stopStore = useStopsStore()
+        this.passengerStore = usePassengerStore()
     }
 
     update(delta) {
@@ -112,7 +115,7 @@ export default class Bus {
                 if (this.onOffStart + this.passengerOnOffTime < performance.now()) {
                     const passengerToDelete = passengersToUnload.pop()
                     this.passengers.delete(passengerToDelete)
-                    this.stopStore.passengers.delete(passengerToDelete)
+                    this.passengerStore.passengers.delete(passengerToDelete)
                     this.onOffStart = 0
                     this.gameStore.passengers++
                     this.marker.fireEvent('game/bus/updateUi')

@@ -13,7 +13,7 @@ const gameStore = useGameStore()
 
   <div class="ui-container">
     <Shop v-if="gameStore.state === gameStore.gameStates.SHOP"/>
-    <UnlockModal v-if="gameStore.state === gameStore.gameStates.UNLOCK_MODAL" :passengerManager="passengerManager"/>
+    <UnlockModal v-if="gameStore.state === gameStore.gameStates.UNLOCK_MODAL"/>
     <Passengers/>
     <LineManager/>
     <WeekDay/>
@@ -28,6 +28,8 @@ const gameStore = useGameStore()
 
   width: 100vw;
   height: 100vh;
+
+	pointer-events: none;
 
   z-index: 500;
 }

@@ -1,8 +1,8 @@
 <template>
 
   <Ui/>
-  <Map v-if="gameStore.state !== gameStore.gameStates.GAME_OVER"/>
-	<GameOver v-else/>
+  <Map/>
+  <GameOver v-if="gameStore.state === gameStore.gameStates.GAME_OVER"/>
 
 </template>
 
